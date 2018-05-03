@@ -75,6 +75,8 @@ def showClock():
 def showNumbers_Hr(number):
     """displays number center of screen"""
     numberDigits = [int(x) for x in list(str(number))]
+    if len(numberDigits)==1:
+    	numberDigits=[0]+numberDigits
     totalWidth = 0 # total width of all numbers to be printed
 
     for digit in numberDigits:
@@ -89,6 +91,8 @@ def showNumbers_Hr(number):
 def showNumbers_Mm(number):
     """displays number center of screen"""
     numberDigits = [int(x) for x in list(str(number))]
+    if len(numberDigits)==1:
+    	numberDigits=[0]+numberDigits
     totalWidth = 0 # total width of all numbers to be printed
 
     for digit in numberDigits:
