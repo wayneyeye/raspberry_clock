@@ -8,7 +8,7 @@ from pygame.locals import *
 import datetime
 
 
-FPS = 30
+FPS = 4
 SCREENWIDTH  = 800
 SCREENHEIGHT = 480
 IMAGES={}
@@ -22,7 +22,8 @@ def main():
     global SCREEN, FPSCLOCK
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
-    SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
+    SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT),pygame.FULLSCREEN)
+    # SCREEN = pygame.display.set_mode(pygame.FULLSCREEN)
     pygame.display.set_caption('Raspy-clock')
 
     IMAGES['background']=pygame.image.load('background_800x480.jpg')
@@ -62,12 +63,12 @@ def showClock():
         SCREEN.blit(IMAGES['background'], (0,0))
         showNumbers_Hr(now.hour)
         showNumbers_Mm(now.minute)
-        if loopIter>=30:
+        if loopIter>=4:
             showColon()
         else:
             showNull()
         pygame.display.update()
-        loopIter = (loopIter+1)%60
+        loopIter = (loopIter+1)%8
         FPSCLOCK.tick(FPS)
 
 
