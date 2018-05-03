@@ -1,3 +1,4 @@
+#!/home/pi/miniconda3/bin/python
 from itertools import cycle
 import random
 import sys
