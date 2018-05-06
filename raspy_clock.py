@@ -2,6 +2,7 @@
 from itertools import cycle
 import random
 import sys
+import math
 
 import pygame
 from pygame.locals import *
@@ -26,8 +27,12 @@ def main():
     # SCREEN = pygame.display.set_mode(pygame.FULLSCREEN)
     pygame.display.set_caption('Raspy-clock')
 
-    IMAGES['background']=pygame.image.load('background_800x480.jpg')
-    # numbers sprites for score display
+    IMAGES['background']=pygame.image.load('assets/background_800x480.jpg')
+    IMAGES['day_background']=pygame.image.load('assets/day_background.jpg')
+    IMAGES['night_background']=pygame.image.load('assets/night_background.jpg')
+    IMAGES['mountain']=pygame.image.load('assets/mountain_bright.png').convert_alpha()
+    IMAGES['sun']=pygame.image.load('assets/sun.png').convert_alpha()
+    IMAGES['moon']=pygame.image.load('assets/moon.png').convert_alpha()
 
     IMAGES['colon']=pygame.image.load('digits/colon.png').convert_alpha()
     IMAGES['null']=pygame.image.load('digits/null.png').convert_alpha()
@@ -47,6 +52,53 @@ def main():
     showClock()
 
 
+def night_sky_alpha(now):
+    if now.hour in [22,23,0,1,2,3]:
+        return 255
+    if now.hour in [8,9,10,11,12,13,14,15,16,17]:
+        return 0
+    total_minutes=now.hour*60+now.minute
+    if total_minutes<=480: # 4am -8am fade out
+        return int(255-255*(total_minutes-240)/240)
+    if total_minutes>=1080: #6pm-10pm fade in
+        return int(255*(total_minutes-1080)/240)
+
+def show_sun(now):
+    total_minutes=now.hour*60+now.minute
+    start_time=6*60
+    end_time=18*60
+    x=(total_minutes-start_time)/(end_time-start_time)
+    y=x*x-x+0.65
+    SCREEN.blit(IMAGES['sun'], (int(x*800),int(y*480)))
+
+def show_moon(now):
+    total_minutes=now.hour*60+now.minute
+    start_time=19*60
+    end_time=24*60+6*60
+    if total_minutes<=start_time:
+        total_minutes=total_minutes+24*60
+    x=(total_minutes-start_time)/(end_time-start_time)
+    y=x*x-x+0.65
+    SCREEN.blit(IMAGES['moon'], (int(x*800),int(y*480)))
+
+
+def night_moutain(surface, now):
+    """Fill all pixels of the surface with color, preserve transparency."""
+    if now.hour in [22,23,0,1,2,3]:
+        darkness=0.2
+    if now.hour in [10,11,12,13,14,15]:
+        darkness=0.9
+    total_minutes=now.hour*60+now.minute
+    if total_minutes<=600: # 4am -10 am increase darkness
+        darkness=0.2+0.7*(total_minutes-240)/360
+    if total_minutes>=960: #4pm -10pm decrease darkness
+        darkness=0.9-0.7*(total_minutes-960)/360
+    w, h = surface.get_size()
+    for x in range(w):
+        for y in range(h):
+            color = surface.get_at((x, y))
+            surface.set_at((x, y), Color(int(color[0]*darkness),int(color[1]*darkness),int(color[2]*darkness),color[3]))
+
 def showClock():
     """Shows clock on screen"""
     # iterator used to change playerIndex after every 5th iteration
@@ -60,7 +112,14 @@ def showClock():
         now = datetime.datetime.now()
 
         # draw sprites
-        SCREEN.blit(IMAGES['background'], (0,0))
+        SCREEN.blit(IMAGES['day_background'], (0,0))
+        IMAGES['night_background'].set_alpha(night_sky_alpha(now))
+        SCREEN.blit(IMAGES['night_background'], (0,0))
+        show_sun(now)
+        IMAGES['mountain_copy']=IMAGES['mountain'].copy()
+        night_moutain(IMAGES['mountain_copy'],now)
+        SCREEN.blit(IMAGES['mountain_copy'], (0,480-191))
+        
         showNumbers_Hr(now.hour)
         showNumbers_Mm(now.minute)
         if loopIter>=4:
