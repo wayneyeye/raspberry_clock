@@ -82,7 +82,7 @@ def show_moon(now):
     SCREEN.blit(IMAGES['moon'], (int(x*800),int(y*480)))
 
 
-def night_moutain(surface, now):
+def night_moutain(now,last_darkness):
     """Fill all pixels of the surface with color, preserve transparency."""
     if now.hour in [22,23,0,1,2,3]:
         darkness=0.2
@@ -93,16 +93,23 @@ def night_moutain(surface, now):
         darkness=0.2+0.7*(total_minutes-240)/360
     if total_minutes>=960: #4pm -10pm decrease darkness
         darkness=0.9-0.7*(total_minutes-960)/360
-    w, h = surface.get_size()
-    for x in range(w):
-        for y in range(h):
-            color = surface.get_at((x, y))
-            surface.set_at((x, y), Color(int(color[0]*darkness),int(color[1]*darkness),int(color[2]*darkness),color[3]))
+
+    if abs(darkness-last_darkness[0])>0.1:
+        last_darkness[0]=darkness
+        IMAGES['mountain_copy']=IMAGES['mountain'].copy()
+        w, h =IMAGES['mountain_copy'].get_size()
+        for x in range(w):
+            for y in range(h):
+                color = IMAGES['mountain_copy'].get_at((x, y))
+                IMAGES['mountain_copy'].set_at((x, y), Color(int(color[0]*darkness),int(color[1]*darkness),int(color[2]*darkness),color[3]))
+    SCREEN.blit(IMAGES['mountain_copy'], (0,480-191))
+
 
 def showClock():
     """Shows clock on screen"""
     # iterator used to change playerIndex after every 5th iteration
     loopIter = 0
+    last_darkness=[-1]
 
     while True:
         for event in pygame.event.get():
@@ -115,10 +122,11 @@ def showClock():
         SCREEN.blit(IMAGES['day_background'], (0,0))
         IMAGES['night_background'].set_alpha(night_sky_alpha(now))
         SCREEN.blit(IMAGES['night_background'], (0,0))
+
         show_sun(now)
-        IMAGES['mountain_copy']=IMAGES['mountain'].copy()
-        night_moutain(IMAGES['mountain_copy'],now)
-        SCREEN.blit(IMAGES['mountain_copy'], (0,480-191))
+        show_moon(now)
+    
+        night_moutain(now,last_darkness)
         
         showNumbers_Hr(now.hour)
         showNumbers_Mm(now.minute)
