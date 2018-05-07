@@ -18,8 +18,21 @@ try:
 except NameError:
     xrange = range
 
+class debug_clock():
+    def __init__(self):
+        self.hour=8
+        self.minute=0
+        self.second=0
+    def ticktock(self):
+        self.minute+=10
+        if self.minute>59:
+            self.minute=self.minute%60
+            self.hour+=1
+        if self.hour>23:
+            self.hour=self.hour%24
 
-def main():
+
+def main(debug=0):
     global SCREEN, FPSCLOCK
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
@@ -49,7 +62,7 @@ def main():
         pygame.image.load('digits/9.png').convert_alpha()
     )
 
-    showClock()
+    showClock(debug)
 
 
 def night_sky_alpha(now):
@@ -89,9 +102,9 @@ def night_moutain(now,last_darkness):
     if now.hour in [10,11,12,13,14,15]:
         darkness=0.9
     total_minutes=now.hour*60+now.minute
-    if total_minutes<=600: # 4am -10 am increase darkness
+    if total_minutes<=600 and total_minutes>=240: # 4am -10 am increase darkness
         darkness=0.2+0.7*(total_minutes-240)/360
-    if total_minutes>=960: #4pm -10pm decrease darkness
+    if total_minutes>=960 and total_minutes<=1320: #4pm -10pm decrease darkness
         darkness=0.9-0.7*(total_minutes-960)/360
 
     if abs(darkness-last_darkness[0])>0.1:
@@ -105,18 +118,21 @@ def night_moutain(now,last_darkness):
     SCREEN.blit(IMAGES['mountain_copy'], (0,480-191))
 
 
-def showClock():
+def showClock(debug=0):
     """Shows clock on screen"""
     # iterator used to change playerIndex after every 5th iteration
     loopIter = 0
     last_darkness=[-1]
-
+    now=debug_clock()
     while True:
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-        now = datetime.datetime.now()
+        if debug:
+            now.ticktock()
+        else:
+            now = datetime.datetime.now()
 
         # draw sprites
         SCREEN.blit(IMAGES['day_background'], (0,0))
@@ -183,4 +199,9 @@ def showNull():
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv)>1 and sys.argv[1]:
+        debug=1
+        print("now in debug mode!")
+    else:
+        debug=0
+    main(debug)
