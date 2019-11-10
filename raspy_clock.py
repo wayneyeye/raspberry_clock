@@ -1,4 +1,4 @@
-#!/home/pi/miniconda3/bin/python
+#!/usr/bin/python
 from itertools import cycle
 import random
 import sys
@@ -37,6 +37,7 @@ def main(debug=0):
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT),pygame.FULLSCREEN)
+    #SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
     # SCREEN = pygame.display.set_mode(pygame.FULLSCREEN)
     pygame.display.set_caption('Raspy-clock')
 
@@ -78,20 +79,23 @@ def night_sky_alpha(now):
 
 def show_sun(now):
     total_minutes=now.hour*60+now.minute
-    start_time=6*60
-    end_time=18*60
-    x=(total_minutes-start_time)/(end_time-start_time)
-    y=x*x-x+0.65
+    #print("total_minute="+str(total_minutes))
+    start_time=5*60
+    end_time=19*60
+    x=(total_minutes-float(start_time))/(end_time-start_time)-0.1
+    y=x*x-0.8*x+0.60
+    #print("sun: x="+str(x)+" y="+str(y))
     SCREEN.blit(IMAGES['sun'], (int(x*800),int(y*480)))
 
 def show_moon(now):
     total_minutes=now.hour*60+now.minute
     start_time=19*60
-    end_time=24*60+6*60
+    end_time=24*60+5*60
     if total_minutes<=start_time:
         total_minutes=total_minutes+24*60
-    x=(total_minutes-start_time)/(end_time-start_time)
-    y=x*x-x+0.65
+    x=(total_minutes-float(start_time))/(end_time-start_time)-0.1
+    y=x*x-0.8*x+0.60
+    #print("moon: x="+str(x)+" y="+str(y))
     SCREEN.blit(IMAGES['moon'], (int(x*800),int(y*480)))
 
 
@@ -131,6 +135,7 @@ def showClock(debug=0):
                 sys.exit()
         if debug:
             now.ticktock()
+            #print("now-hr="+str(now.hour))
         else:
             now = datetime.datetime.now()
 
