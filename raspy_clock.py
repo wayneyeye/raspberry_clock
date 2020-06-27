@@ -7,12 +7,14 @@ import math
 import pygame
 from pygame.locals import *
 import datetime
+import json
 
 
 FPS = 4
 SCREENWIDTH  = 800
 SCREENHEIGHT = 480
 IMAGES={}
+WEATHER={}
 try:
     xrange
 except NameError:
@@ -24,7 +26,7 @@ class debug_clock():
         self.minute=0
         self.second=0
     def ticktock(self):
-        self.minute+=10
+        self.minute+=30
         if self.minute>59:
             self.minute=self.minute%60
             self.hour+=1
@@ -36,7 +38,10 @@ def main(debug=0):
     global SCREEN, FPSCLOCK
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
-    SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT),pygame.FULLSCREEN)
+    if (debug==0):
+        SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT),pygame.FULLSCREEN)
+    else:
+        SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
     #SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
     # SCREEN = pygame.display.set_mode(pygame.FULLSCREEN)
     pygame.display.set_caption('Raspy-clock')
@@ -64,6 +69,7 @@ def main(debug=0):
     )
 
     showClock(debug)
+
 
 
 def night_sky_alpha(now):
@@ -98,6 +104,32 @@ def show_moon(now):
     #print("moon: x="+str(x)+" y="+str(y))
     SCREEN.blit(IMAGES['moon'], (int(x*800),int(y*480)))
 
+def show_weather(idx=0,center=(100,380)):
+    #with open('weather/export.json') as f:
+    #    WEATHER=json.load(f)
+    SCREEN.blit(IMAGES['weather_icon'][idx], center)
+    font=pygame.font.Font('freesansbold.ttf', 24)
+    white = (255, 255, 255)
+    grey = (200,200,200)
+    green = (0, 255, 0)
+    blue = (0, 0, 128)
+    #show temp
+    text = font.render(format(WEATHER['data']['forecast'][idx]['real_temp'],'.1f')+u"\u00b0"+"C", True, white)
+    SCREEN.blit(text,center)
+    #show time
+    dttime=datetime.datetime.strptime(WEATHER['data']['forecast'][idx]['dt'],"%Y%m%f_%H%M%S")
+    font=pygame.font.Font('freesansbold.ttf', 16)
+    text = font.render(dttime.strftime("%-I%p"), True, grey)
+    SCREEN.blit(text,(center[0]-30,center[1]+40))
+
+def update_weather():
+    with open('weather/export.json') as f:
+        WEATHER['data']=json.load(f)
+        IMAGES['weather_icon']=[]
+    for fcast in WEATHER['data']['forecast'][:12]:
+        #loads weather icons
+        IMAGES['weather_icon'].append(pygame.transform.scale(pygame.image.load(fcast['icon_path']).convert_alpha(),(100,100)))
+
 
 def night_moutain(now,last_darkness):
     """Fill all pixels of the surface with color, preserve transparency."""
@@ -128,6 +160,7 @@ def showClock(debug=0):
     loopIter = 0
     last_darkness=[-1]
     now=debug_clock()
+    last_hour=-1
     while True:
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -151,14 +184,33 @@ def showClock(debug=0):
         
         showNumbers_Hr(now.hour)
         showNumbers_Mm(now.minute)
+        # draw weather board
+        show_weatherboard()
+
+
+        if (last_hour != now.hour):
+            update_weather()
+            #print("update weather")
+            last_hour=now.hour
+        show_weather(0,(70,380))
+        show_weather(2,(220,380))
+        show_weather(4,(370,380))
+        show_weather(6,(520,380))
+        show_weather(8,(670,380))
         if loopIter>=4:
             showColon()
         else:
             showNull()
+
         pygame.display.update()
         loopIter = (loopIter+1)%8
         FPSCLOCK.tick(FPS)
 
+def show_weatherboard():
+    weather_board = pygame.Surface((SCREENWIDTH,100))  # the size of your rect
+    weather_board.set_alpha(50)                # alpha level
+    weather_board.fill((255,255,255))
+    SCREEN.blit(weather_board,(0,370))
 
 def showNumbers_Hr(number):
     """displays number center of screen"""
